@@ -1,0 +1,1898 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="UTF-8">
+<title>Корабль</title></head>
+<body style="background:#0a0a0f;color:#e8e8e8;font-family:Arial;margin:0;">
+
+<style>
+html, body {
+    background:
+        radial-gradient(1px 1px at 15% 25%, rgba(255,255,255,0.8), transparent),
+        radial-gradient(1px 1px at 35% 75%, rgba(255,255,255,0.6), transparent),
+        radial-gradient(1px 1px at 55% 15%, rgba(255,255,255,0.7), transparent),
+        radial-gradient(1px 1px at 75% 55%, rgba(255,255,220,0.7), transparent),
+        radial-gradient(1px 1px at 90% 85%, rgba(255,255,255,0.6), transparent),
+        radial-gradient(1px 1px at 10% 90%, rgba(255,255,255,0.5), transparent),
+        radial-gradient(1px 1px at 45% 40%, rgba(255,255,255,0.6), transparent),
+        radial-gradient(1px 1px at 80% 10%, rgba(255,255,255,0.7), transparent),
+        radial-gradient(ellipse at top, #1a1f2e 0%, #0d0d15 50%, #05050a 100%)
+    !important;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    background-attachment: fixed;
+    overflow-x: hidden;
+}
+
+#shipBtn {
+    position: fixed; bottom: 24px; right: 24px;
+    z-index: 1002; padding: 14px 26px;
+    background: linear-gradient(135deg, rgba(255,215,0,0.18), rgba(255,140,0,0.08));
+    border: 2px solid #FFD700; border-radius: 10px;
+    color: #FFD700; font-family: Arial, sans-serif;
+    font-size: 15px; font-weight: bold; cursor: pointer;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    text-shadow: 0 0 10px rgba(255,215,0,0.5);
+    box-shadow: 0 0 20px rgba(255,215,0,0.4), 0 0 40px rgba(255,215,0,0.15), 0 4px 20px rgba(0,0,0,0.6);
+    animation: shipBtnPulse 2.4s ease-in-out infinite;
+    transition: transform 0.2s, background 0.2s;
+}
+#shipBtn:hover {
+    background: linear-gradient(135deg, rgba(255,215,0,0.35), rgba(255,140,0,0.15));
+    transform: translateY(-3px) scale(1.04);
+    box-shadow: 0 0 32px rgba(255,215,0,0.7), 0 0 64px rgba(255,215,0,0.3), 0 6px 24px rgba(0,0,0,0.6);
+}
+#shipBtn.hidden { display: none; }
+@keyframes shipBtnPulse {
+    0%, 100% { box-shadow: 0 0 20px rgba(255,215,0,0.4), 0 0 40px rgba(255,215,0,0.15), 0 4px 20px rgba(0,0,0,0.6); }
+    50%      { box-shadow: 0 0 30px rgba(255,215,0,0.6), 0 0 60px rgba(255,215,0,0.25), 0 4px 20px rgba(0,0,0,0.6); }
+}
+
+.ship-overlay {
+    position: fixed; inset: 0;
+    background: radial-gradient(ellipse at center, rgba(30,35,55,0.55) 0%, rgba(0,0,0,0.85) 100%);
+    backdrop-filter: blur(4px);
+    z-index: 4000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-family: Arial, sans-serif;
+    color: #E8E8E8;
+}
+.ship-overlay.visible { display: flex; }
+
+.ship-box {
+    background: #0d0d12;
+    border: 3px double #FFD700;
+    border-radius: 10px;
+    width: 640px; max-width: 94vw;
+    max-height: 92vh;
+    display: flex; flex-direction: column;
+    box-shadow:
+        0 0 60px rgba(255,215,0,0.2),
+        0 0 120px rgba(255,215,0,0.08),
+        inset 0 2px 0 rgba(255,215,0,0.45),
+        inset 0 -2px 0 rgba(255,215,0,0.35),
+        inset 0 0 80px rgba(255,215,0,0.03);
+    overflow: hidden;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+.ship-box.ship-warn  { border-color: #FFC107; box-shadow: 0 0 60px rgba(255,193,7,0.35); }
+.ship-box.ship-dead  { border-color: #E53935; box-shadow: 0 0 60px rgba(229,57,53,0.45); }
+
+.ship-header {
+    padding: 14px 20px;
+    background: linear-gradient(135deg, rgba(45,40,70,0.95), rgba(20,20,30,0.95), rgba(50,35,70,0.95));
+    background-size: 220% 220%;
+    animation: shipHeaderFlow 9s ease-in-out infinite;
+    border-bottom: 1px solid rgba(255,215,0,0.35);
+    display: flex; justify-content: space-between; align-items: center;
+    position: relative;
+    box-shadow: inset 0 -1px 20px rgba(255,215,0,0.1);
+}
+@keyframes shipHeaderFlow {
+    0%, 100% { background-position: 0% 50%; }
+    50%      { background-position: 100% 50%; }
+}
+.ship-title {
+    color: #FFD700; font-size: 17px; font-weight: bold; letter-spacing: 1.5px;
+    text-shadow: 0 0 12px rgba(255,215,0,0.65), 0 0 24px rgba(255,215,0,0.3);
+}
+.ship-title .ship-badge { color: #666; font-size: 11px; margin-left: 8px; font-weight: normal; font-style: italic; }
+.ship-close { color: #999; cursor: pointer; font-weight: bold; padding: 2px 8px; border-radius: 4px; font-size: 18px; }
+.ship-close:hover { color: #FFD700; background: rgba(255,215,0,0.1); }
+
+.ship-alert-lamp {
+    position: absolute; top: 8px; right: 50px;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    display: none;
+    animation: shipLampPulse 1.2s ease-in-out infinite;
+}
+.ship-alert-lamp.warn { display: block; background: #FFC107; box-shadow: 0 0 12px #FFC107; }
+.ship-alert-lamp.dead { display: block; background: #E53935; box-shadow: 0 0 14px #E53935; }
+@keyframes shipLampPulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.4; }
+}
+
+.ship-body {
+    padding: 16px 18px;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+    background:
+        radial-gradient(1px 1px at 15% 20%, rgba(255,255,255,0.09), transparent),
+        radial-gradient(1px 1px at 85% 70%, rgba(255,255,255,0.07), transparent),
+        radial-gradient(1px 1px at 40% 90%, rgba(255,255,255,0.06), transparent),
+        radial-gradient(1px 1px at 70% 35%, rgba(255,255,220,0.07), transparent);
+}
+
+.ship-block {
+    margin-bottom: 14px;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, rgba(255,215,0,0.035), rgba(0,0,0,0.4));
+    border: 1px solid #333;
+    border-left: 3px solid #FFD700;
+    border-radius: 6px;
+    transition: border-color 0.25s, box-shadow 0.25s;
+}
+.ship-block:hover {
+    border-color: rgba(255,215,0,0.45);
+    box-shadow: 0 0 22px rgba(255,215,0,0.09), inset 0 0 22px rgba(255,215,0,0.03);
+}
+.ship-block-title {
+    color: #FFD700; font-size: 11px;
+    text-transform: uppercase; letter-spacing: 2px;
+    margin-bottom: 10px; font-weight: bold;
+    text-shadow: 0 0 8px rgba(255,215,0,0.45);
+    display: flex; align-items: center; gap: 10px;
+}
+.ship-block-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(255,215,0,0.5), transparent);
+}
+
+.ship-field { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 13px; }
+.ship-field-label { color: #999; min-width: 160px; flex-shrink: 0; }
+.ship-field-value { color: #E8E8E8; flex: 1; }
+.ship-field input[type="text"], .ship-field input[type="number"] {
+    flex: 1;
+    padding: 5px 8px;
+    background: rgba(20,20,30,0.9);
+    border: 1px solid #555; border-radius: 4px;
+    color: #E8E8E8; font-family: inherit; font-size: 13px;
+    outline: none;
+}
+.ship-field input:focus { border-color: #FFD700; }
+.ship-field select {
+    padding: 5px 8px;
+    background: rgba(20,20,30,0.9);
+    border: 1px solid #555; border-radius: 4px;
+    color: #E8E8E8; font-family: inherit; font-size: 13px;
+    outline: none;
+}
+
+.ship-num-prefix, .ship-num-suffix { color: #888; font-size: 12px; }
+
+.ship-res-row {
+    display: grid;
+    grid-template-columns: 24px 110px 1fr 140px;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+.ship-res-row .ship-res-btn { width: 100%; text-align: center; }
+.ship-res-row .ship-res-btn:disabled { opacity: 0.35; }
+.ship-res-icon {
+    font-size: 18px;
+    filter: drop-shadow(0 0 6px rgba(255,215,0,0.4));
+    text-align: center;
+}
+.ship-res-name { font-size: 11px; color: #999; letter-spacing: 1px; text-transform: uppercase; }
+.ship-res-bar-wrap { position: relative; }
+.ship-res-bar {
+    height: 10px; background: #1a1a22; border-radius: 5px;
+    border: 1px solid #333; overflow: hidden; margin-bottom: 3px;
+}
+.ship-res-bar-fill {
+    height: 100%; border-radius: 5px;
+    transition: width 0.45s ease;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 0 8px rgba(255,255,255,0.15);
+}
+.ship-res-bar-fill::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    animation: shipBarShimmer 2.2s linear infinite;
+    pointer-events: none;
+}
+@keyframes shipBarShimmer {
+    0%   { transform: translateX(-100%); }
+    100% { transform: translateX(200%); }
+}
+.ship-res-nums { font-size: 11px; color: #888; font-family: monospace; }
+.ship-res-input { width: 70px; padding: 4px 6px; background: rgba(20,20,30,0.9); border: 1px solid #555; border-radius: 3px; color: #E8E8E8; font-family: monospace; font-size: 12px; text-align: right; outline: none; }
+.ship-res-input:focus { border-color: #FFD700; }
+.ship-res-btn {
+    padding: 4px 10px; background: rgba(255,215,0,0.1);
+    border: 1px solid #FFD700; border-radius: 4px;
+    color: #FFD700; font-family: inherit; font-size: 11px;
+    cursor: pointer; white-space: nowrap;
+}
+.ship-res-btn:hover { background: rgba(255,215,0,0.25); }
+.ship-res-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.ship-actions { display: flex; gap: 8px; margin-top: 6px; }
+.ship-btn-main {
+    flex: 1; padding: 11px 16px;
+    background: linear-gradient(135deg, rgba(255,215,0,0.18), rgba(255,140,0,0.09));
+    border: 1px solid #FFD700; border-radius: 6px;
+    color: #FFD700; font-family: inherit; font-size: 13px;
+    font-weight: bold; cursor: pointer; letter-spacing: 0.5px;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+.ship-btn-main::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.55s;
+    pointer-events: none;
+}
+.ship-btn-main:hover:not(:disabled)::before { transform: translateX(100%); }
+.ship-btn-main:hover:not(:disabled) {
+    background: linear-gradient(135deg, rgba(255,215,0,0.35), rgba(255,140,0,0.18));
+    box-shadow: 0 0 22px rgba(255,215,0,0.45);
+    transform: translateY(-1px);
+}
+.ship-btn-main:disabled { opacity: 0.4; cursor: not-allowed; }
+.ship-btn-secondary {
+    padding: 8px 16px; background: transparent;
+    border: 1px solid #555; border-radius: 6px;
+    color: #999; font-family: inherit; font-size: 12px;
+    cursor: pointer;
+}
+.ship-btn-secondary:hover { color: #CCC; border-color: #777; }
+
+.ship-card-select-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    margin-top: 10px;
+}
+.ship-card-select {
+    padding: 20px 16px;
+    background: rgba(255,215,0,0.05);
+    border: 2px solid #444; border-radius: 8px;
+    text-align: center; cursor: pointer;
+    transition: all 0.15s;
+}
+.ship-card-select:hover { border-color: #FFD700; background: rgba(255,215,0,0.12); }
+.ship-card-select-icon { font-size: 48px; margin-bottom: 10px; }
+.ship-card-select-name { color: #FFD700; font-size: 18px; font-weight: bold; margin-bottom: 4px; }
+.ship-card-select-sub { color: #888; font-size: 12px; font-style: italic; }
+
+.ship-ttx-row {
+    display: flex; align-items: center; gap: 6px;
+    padding: 4px 0; font-size: 13px;
+    border-bottom: 1px dotted rgba(255,255,255,0.05);
+}
+.ship-ttx-row:last-child { border-bottom: none; }
+.ship-ttx-label { color: #999; min-width: 200px; flex-shrink: 0; }
+.ship-ttx-value { color: #E8E8E8; flex: 1; }
+.ship-ttx-value input, .ship-ttx-value select {
+    padding: 3px 8px; background: rgba(20,20,30,0.9);
+    border: 1px solid #555; border-radius: 3px;
+    color: #E8E8E8; font-family: inherit; font-size: 13px;
+    outline: none; width: 100px;
+}
+.ship-ttx-value input:focus, .ship-ttx-value select:focus { border-color: #FFD700; }
+.ship-ttx-prefix, .ship-ttx-suffix { color: #888; font-size: 12px; }
+
+.ship-clearance-list {
+    margin-top: 10px; display: flex; flex-direction: column; gap: 6px;
+}
+.ship-clearance-item {
+    padding: 8px 12px;
+    background: rgba(80,220,120,0.06);
+    border-left: 3px solid currentColor;
+    border-radius: 4px;
+    font-size: 12px;
+    display: flex; align-items: center; gap: 10px;
+    transition: transform 0.18s, box-shadow 0.18s;
+    box-shadow: inset 0 0 20px rgba(255,255,255,0.02);
+}
+.ship-clearance-item:hover {
+    transform: translateX(4px);
+    box-shadow: inset 0 0 20px rgba(255,255,255,0.05), 0 0 14px rgba(255,255,255,0.06);
+}
+.ship-clearance-item .clr-id {
+    font-weight: bold; font-family: monospace;
+    font-size: 13px; min-width: 54px;
+    letter-spacing: 0.5px;
+    text-shadow: 0 0 8px currentColor;
+}
+.ship-clearance-item .clr-name {
+    flex: 1; color: #BBB; font-size: 12px;
+}
+.ship-clearance-item .clr-tag {
+    font-size: 10px; text-transform: uppercase;
+    letter-spacing: 1px; opacity: 0.6;
+}
+.ship-clearance-empty { color: #666; font-size: 12px; font-style: italic; }
+
+/* Полноэкранный алерт */
+.ship-alert-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.92);
+    z-index: 5000;
+    display: none;
+    align-items: center; justify-content: center;
+    font-family: Arial, sans-serif;
+}
+.ship-alert-overlay.visible { display: flex; }
+.ship-alert-box {
+    text-align: center;
+    max-width: 520px;
+    padding: 40px 30px;
+    border: 3px double currentColor;
+    border-radius: 12px;
+    background: rgba(15,15,20,0.98);
+}
+.ship-alert-overlay.ship-alert-warn .ship-alert-box { color: #FFC107; box-shadow: 0 0 80px rgba(255,193,7,0.4); }
+.ship-alert-overlay.ship-alert-dead .ship-alert-box { color: #E53935; box-shadow: 0 0 80px rgba(229,57,53,0.6); }
+.ship-alert-icon { font-size: 64px; margin-bottom: 16px; }
+.ship-alert-title { font-size: 22px; font-weight: bold; letter-spacing: 2px; margin-bottom: 16px; }
+.ship-alert-text { color: #CCC; font-size: 13px; line-height: 1.7; margin-bottom: 18px; }
+.ship-alert-text b { color: #E8E8E8; }
+.ship-alert-systems { text-align: left; padding: 12px 20px; background: rgba(0,0,0,0.4); border-radius: 6px; margin-bottom: 18px; }
+.ship-alert-systems .sys-ok { color: #7FDC9F; }
+.ship-alert-systems .sys-off { color: #FF8888; }
+.ship-alert-systems div { font-size: 12px; line-height: 1.7; }
+.ship-alert-btn {
+    padding: 10px 30px;
+    background: rgba(255,255,255,0.06);
+    border: 2px solid currentColor; border-radius: 6px;
+    color: inherit; font-family: inherit; font-size: 14px;
+    font-weight: bold; cursor: pointer; letter-spacing: 1px;
+}
+.ship-alert-btn:hover { background: rgba(255,255,255,0.15); }
+
+/* Модалка ресурса */
+.ship-mini-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 4500;
+    display: none;
+    align-items: center; justify-content: center;
+    font-family: Arial, sans-serif;
+    color: #E8E8E8;
+}
+.ship-mini-overlay.visible { display: flex; }
+.ship-mini-box {
+    background: #0d0d12;
+    border: 2px solid #FFD700;
+    border-radius: 8px;
+    width: 380px; max-width: 90vw;
+    padding: 20px;
+}
+.ship-mini-title { color: #FFD700; font-size: 15px; font-weight: bold; margin-bottom: 14px; }
+.ship-mini-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.ship-mini-row input { flex: 1; padding: 8px 10px; background: rgba(20,20,30,0.9); border: 1px solid #555; border-radius: 4px; color: #E8E8E8; font-family: monospace; font-size: 16px; text-align: center; outline: none; }
+.ship-mini-row input:focus { border-color: #FFD700; }
+.ship-mini-max { color: #888; font-size: 12px; white-space: nowrap; }
+.ship-mini-err { color: #FF8888; font-size: 11px; min-height: 14px; margin-bottom: 10px; text-align: center; }
+.ship-mini-btns { display: flex; gap: 8px; }
+.ship-mini-btns button { flex: 1; padding: 8px 12px; border-radius: 4px; font-family: inherit; font-size: 13px; font-weight: bold; cursor: pointer; }
+.ship-mini-apply { background: rgba(255,215,0,0.15); border: 1px solid #FFD700; color: #FFD700; }
+.ship-mini-apply:hover { background: rgba(255,215,0,0.3); }
+.ship-mini-cancel { background: transparent; border: 1px solid #555; color: #999; }
+.ship-mini-cancel:hover { color: #CCC; }
+
+/* Гиперпрыжок */
+.ship-hyper-box { width: 480px; }
+.ship-hyper-field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px; }
+.ship-hyper-field label { color: #999; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+.ship-hyper-field input { padding: 8px 12px; background: rgba(20,20,30,0.9); border: 1px solid #555; border-radius: 4px; color: #E8E8E8; font-family: inherit; font-size: 14px; outline: none; }
+.ship-hyper-field input:focus { border-color: #FFD700; }
+
+.ship-hyper-loading { text-align: center; padding: 30px 10px; }
+.ship-hyper-loading-icon { font-size: 32px; margin-bottom: 14px; letter-spacing: 8px; animation: shipRotate 2s linear infinite; display: inline-block; }
+@keyframes shipRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.ship-hyper-loading-text { color: #FFD700; font-size: 13px; margin-bottom: 14px; letter-spacing: 1px; }
+.ship-hyper-bar { height: 8px; background: #1a1a22; border-radius: 4px; overflow: hidden; border: 1px solid #333; }
+.ship-hyper-bar-fill { height: 100%; width: 0%; background: linear-gradient(to right, #FFD700, #FF8C00); border-radius: 4px; transition: width 0.1s linear; }
+
+.ship-hyper-success { text-align: center; padding: 20px 10px; }
+.ship-hyper-success-icon { font-size: 40px; margin-bottom: 12px; letter-spacing: 12px; color: #FFD700; animation: shipTwinkle 1.5s ease-in-out infinite; }
+@keyframes shipTwinkle { 0%, 100% { opacity: 1; text-shadow: 0 0 20px #FFD700; } 50% { opacity: 0.6; text-shadow: 0 0 40px #FFD700; } }
+.ship-hyper-success-title { color: #FFD700; font-size: 18px; font-weight: bold; letter-spacing: 2px; margin-bottom: 10px; }
+.ship-hyper-success-text { color: #CCC; font-size: 13px; line-height: 1.7; margin-bottom: 18px; }
+.ship-hyper-success-text b { color: #FFD700; }
+
+.ship-hyper-error { text-align: center; padding: 20px 10px; }
+.ship-hyper-error-icon { font-size: 48px; color: #FF4444; margin-bottom: 12px; }
+.ship-hyper-error-title { color: #FF4444; font-size: 16px; font-weight: bold; letter-spacing: 1.5px; margin-bottom: 12px; }
+.ship-hyper-error-text { color: #CCC; font-size: 13px; line-height: 1.7; margin-bottom: 18px; }
+
+/* Бортовой журнал */
+
+
+.journal-new { display: flex; flex-direction: column; gap: 8px; }
+.journal-new textarea {
+    width: 100%; min-height: 72px;
+    padding: 10px 12px;
+    background: rgba(20,20,30,0.9);
+    border: 1px solid #555; border-radius: 6px;
+    color: #E8E8E8; font-family: inherit; font-size: 13px;
+    outline: none; resize: vertical; box-sizing: border-box;
+    transition: border-color 0.2s;
+}
+.journal-new textarea:focus { border-color: #FFD700; }
+.journal-new .ship-btn-main { flex: 0 0 auto; align-self: flex-end; padding: 10px 28px; min-width: 140px; font-size: 13px; }
+.journal-hint { color: #666; font-size: 11px; font-style: italic; }
+
+.journal-entry {
+    padding: 10px 14px;
+    background: rgba(255,215,0,0.03);
+    border-left: 3px solid rgba(255,215,0,0.5);
+    border-radius: 4px;
+    margin-bottom: 8px;
+    transition: background 0.2s, border-color 0.2s;
+}
+.journal-entry:hover {
+    background: rgba(255,215,0,0.06);
+    border-left-color: #FFD700;
+}
+.journal-entry-text {
+    color: #E8E8E8; font-size: 13px; line-height: 1.6;
+    margin-bottom: 8px;
+    white-space: pre-wrap; word-break: break-word;
+}
+.journal-entry-foot {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 11px; color: #666;
+    font-family: monospace;
+}
+.journal-entry-del {
+    color: #666; cursor: pointer;
+    padding: 3px 10px; border-radius: 3px;
+    font-family: Arial, sans-serif; font-size: 11px;
+    transition: all 0.15s;
+}
+.journal-entry-del:hover {
+    color: #FF8888; background: rgba(255,136,136,0.12);
+}
+
+/* Двигатель */
+.engine-display {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid #333;
+    border-radius: 6px;
+    margin-top: 12px;
+}
+.engine-lamp {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: #222;
+    border: 2px solid #444;
+    flex-shrink: 0;
+    transition: all 0.3s;
+}
+.engine-lamp.off    { background: #222; border-color: #444; }
+.engine-lamp.orange { background: #F97316; border-color: #F97316; box-shadow: 0 0 14px #F97316; animation: engLampPulse 1.0s ease-in-out infinite; }
+.engine-lamp.yellow { background: #FBBF24; border-color: #FBBF24; box-shadow: 0 0 14px #FBBF24; animation: engLampPulse 1.0s ease-in-out infinite; }
+.engine-lamp.green  { background: #22C55E; border-color: #22C55E; box-shadow: 0 0 14px #22C55E; animation: engLampPulse 1.0s ease-in-out infinite; }
+.engine-lamp.blue   { background: #3B82F6; border-color: #3B82F6; box-shadow: 0 0 18px #3B82F6; animation: engLampPulse 0.55s ease-in-out infinite; }
+@keyframes engLampPulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.35; }
+}
+@keyframes engineHeatPulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.55; }
+}
+.engine-speed {
+    font-size: 34px;
+    font-weight: bold;
+    color: #FFD700;
+    font-family: monospace;
+    min-width: 130px;
+    text-align: right;
+    text-shadow: 0 0 14px rgba(255,215,0,0.55);
+    transition: color 0.3s;
+}
+.engine-speed.is-forsage {
+    color: #60A5FA;
+    text-shadow: 0 0 18px rgba(59,130,246,0.8);
+}
+.engine-speed-unit {
+    color: #888; font-size: 14px;
+    margin-left: -10px; margin-right: auto;
+}
+.engine-mode {
+    color: #888; font-size: 11px;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    font-weight: bold;
+}
+.engine-mode.mode-orange { color: #F97316; text-shadow: 0 0 8px rgba(249,115,22,0.5); }
+.engine-mode.mode-yellow { color: #FBBF24; text-shadow: 0 0 8px rgba(251,191,36,0.5); }
+.engine-mode.mode-green  { color: #22C55E; text-shadow: 0 0 8px rgba(34,197,94,0.5); }
+.engine-mode.mode-blue   { color: #3B82F6; text-shadow: 0 0 8px rgba(59,130,246,0.6); }
+
+/* Вкладки карточки */
+.ship-tabs {
+    display: flex;
+    gap: 2px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid #333;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,215,0,0.35) transparent;
+}
+.ship-tabs::-webkit-scrollbar { height: 4px; }
+.ship-tabs::-webkit-scrollbar-thumb { background: rgba(255,215,0,0.35); border-radius: 2px; }
+.ship-tab {
+    padding: 8px 10px;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: #888;
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+}
+.ship-tab:hover { color: #FFD700; }
+.ship-tab.active {
+    color: #FFD700;
+    border-bottom-color: #FFD700;
+    text-shadow: 0 0 8px rgba(255,215,0,0.5);
+}
+
+/* Warp-эффект гиперпрыжка */
+.warp-overlay {
+    position: fixed; inset: 0;
+    background: #000;
+    z-index: 9999;
+    display: none;
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity 0.4s;
+}
+.warp-overlay.visible { display: block; opacity: 1; }
+.warp-star {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 3px; height: 3px;
+    margin-left: -1.5px; margin-top: -1.5px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 6px #fff, 0 0 14px rgba(255,215,0,0.8), 0 0 22px rgba(255,140,0,0.45);
+    transform-origin: center center;
+    animation: warpStreak 1.9s cubic-bezier(0.5, 0, 0.9, 0.8) forwards;
+    opacity: 0;
+}
+@keyframes warpStreak {
+    0%   { transform: rotate(var(--a)) translateX(0)       scale(0.4); opacity: 0; }
+    15%  { transform: rotate(var(--a)) translateX(10px)    scale(1);   opacity: 1; }
+    100% { transform: rotate(var(--a)) translateX(120vmax) scale(5);   opacity: 0; }
+}
+.warp-text {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    color: #FFD700;
+    font-family: Arial, sans-serif;
+    font-size: 28px;
+    font-weight: bold;
+    letter-spacing: 8px;
+    text-shadow: 0 0 20px #FFD700, 0 0 40px #FFD700, 0 0 60px #FF8C00;
+    opacity: 0;
+    animation: warpTextAnim 2s ease-in-out forwards;
+    pointer-events: none;
+    white-space: nowrap;
+}
+@keyframes warpTextAnim {
+    0%   { opacity: 0; letter-spacing: 8px;  }
+    25%  { opacity: 1; letter-spacing: 18px; }
+    70%  { opacity: 1; letter-spacing: 18px; }
+    100% { opacity: 0; letter-spacing: 32px; }
+}
+</style>
+
+<button id="shipBtn">🚀 Мой корабль</button>
+
+<div id="shipOverlay" class="ship-overlay">
+    <div id="shipBox" class="ship-box">
+        <div class="ship-header">
+            <div class="ship-title" id="shipTitle">Корабль</div>
+            <div class="ship-alert-lamp" id="shipLamp"></div>
+            <span class="ship-close" id="shipClose">✕</span>
+        </div>
+        <div class="ship-body" id="shipBody"></div>
+    </div>
+</div>
+
+<div id="shipAlertOverlay" class="ship-alert-overlay">
+    <div class="ship-alert-box">
+        <div class="ship-alert-icon" id="shipAlertIcon">⚠</div>
+        <div class="ship-alert-title" id="shipAlertTitle"></div>
+        <div class="ship-alert-text" id="shipAlertText"></div>
+        <div class="ship-alert-systems" id="shipAlertSystems"></div>
+        <button class="ship-alert-btn" id="shipAlertBtn">Roger-roger</button>
+    </div>
+</div>
+
+<div id="shipMiniOverlay" class="ship-mini-overlay">
+    <div class="ship-mini-box">
+        <div class="ship-mini-title" id="shipMiniTitle"></div>
+        <div class="ship-mini-row">
+            <input type="number" id="shipMiniInput" step="1" min="0">
+            <span class="ship-mini-max" id="shipMiniMax"></span>
+        </div>
+        <div class="ship-mini-err" id="shipMiniErr"></div>
+        <div class="ship-mini-btns">
+            <button class="ship-mini-apply" id="shipMiniApply">Применить</button>
+            <button class="ship-mini-cancel" id="shipMiniCancel">Отмена</button>
+        </div>
+    </div>
+</div>
+
+<div id="shipHyperOverlay" class="ship-mini-overlay">
+    <div class="ship-mini-box ship-hyper-box">
+        <div class="ship-mini-title">🌌 Гиперпрыжок</div>
+        <div id="shipHyperBody"></div>
+    </div>
+</div>
+
+<div id="warpOverlay" class="warp-overlay">
+    <div id="warpStars"></div>
+    <div class="warp-text">ПРЫЖОК</div>
+</div>
+
+
+<script>
+(function() {
+var TEMPLATES = {"GX1": {"icon": "🚁", "subtitle": "Шаттл ближнего радиуса", "hyper_energy": 10, "crit_energy": 8, "engine_modes": {"min": 6, "orange_max": 10, "yellow_max": 15, "green_max": 19}, "brake_accel": 50, "weapons_pool": ["Лазерная турель"], "ttx": {"atmo_speed": 800, "max_space": 2000, "avg_space": 1500, "accel": 100, "maneuver": 10, "shields": 0, "hull": 200, "crew": 2, "passengers": 8, "cargo_cap": 4, "cargo_bays": 0, "escape_pods": 0, "energy_sys": 50, "energy_sys_name": "V3V", "nav_class": "E", "sens_class": "E", "hyper_class": 1.5, "hyper_range": 3, "fuel_cap": 3, "maintenance": 50}}, "HWK-290": {"icon": "🚚", "subtitle": "Лёгкий грузовой корабль", "hyper_energy": 20, "crit_energy": 15, "engine_modes": {"min": 12, "orange_max": 24, "yellow_max": 38, "green_max": 52}, "brake_accel": 200, "weapons_pool": ["Лазерная турель", "Лёгкая лазерная пушка", "Средняя лазерная пушка", "Тяжёлая лазерная пушка", "Ракетная пусковая установка", "Лёгкий протонный торпедный аппарат", "Лёгкая ионная пушка", "Лёгкий турболазер"], "ttx": {"atmo_speed": 850, "max_space": 3500, "avg_space": 2500, "accel": 150, "maneuver": 15, "shields": 50, "hull": 300, "crew": 2, "passengers": 2, "cargo_cap": 50, "cargo_bays": 3, "escape_pods": 0, "energy_sys": 100, "energy_sys_name": "V4V", "nav_class": "C", "sens_class": "D", "hyper_class": 2.0, "hyper_range": 8, "fuel_cap": 12, "maintenance": 100}}};
+var CODES = {"AU499STA": {"id": "AUR", "name": "Спецдопуск 105-го сектора"}, "RE506ROIN": {"id": "AUR", "name": "Спецдопуск 105-го сектора"}, "KFVJY8": {"id": "AUR", "name": "Спецдопуск 105-го сектора"}, "OVOL5115": {"id": "AUR+", "name": "Спецдопуск 105-го сектора расширенный"}, "VCMOL5": {"id": "AUR+", "name": "Спецдопуск 105-го сектора расширенный"}, "BPD00G": {"id": "G0", "name": "Внешнее кольцо"}, "TBPD11PG": {"id": "G1", "name": "Внешнее кольцо"}, "UM32ABG": {"id": "G2", "name": "Внешнее кольцо"}, "WDTP9D": {"id": "G3", "name": "Внешнее кольцо"}, "PS3CKM": {"id": "G4", "name": "Внешнее кольцо"}, "SNC7SL": {"id": "J0", "name": "Среднее кольцо"}, "CLPH4F": {"id": "J1", "name": "Среднее кольцо"}, "VVG5MW": {"id": "J2", "name": "Среднее кольцо"}, "SIOD45KK": {"id": "J3", "name": "Среднее кольцо"}, "UMCH50S": {"id": "J4", "name": "Среднее кольцо"}, "HSS77B": {"id": "Y0", "name": "Центральные миры"}, "PPV99S": {"id": "Y1", "name": "Центральные миры"}, "ZUV54GM": {"id": "Y2", "name": "Центральные миры"}, "1551C8C": {"id": "Y3", "name": "Центральные миры"}, "PNMIG554487": {"id": "Y4", "name": "Центральные миры"}, "MRSH88Y": {"id": "W5", "name": "Военный допуск"}, "66BB99DNA96": {"id": "P0", "name": "Лицензия пирата"}, "JNRELFDPZK": {"id": "D5", "name": "Дипломатический допуск"}};
+var NAV_SEC = {"A": 10, "B": 20, "C": 30, "D": 40, "E": 50, "F": 60};
+var STORAGE = 'galaxy_player_ship';
+
+function getState() {
+    try {
+        var raw = localStorage.getItem(STORAGE);
+        return raw ? JSON.parse(raw) : null;
+    } catch(e) { return null; }
+}
+function saveState(s) {
+    try { localStorage.setItem(STORAGE, JSON.stringify(s)); } catch(e) {}
+}
+function clearState() {
+    try { localStorage.removeItem(STORAGE); } catch(e) {}
+}
+
+function newState(templateKey) {
+    var tpl = TEMPLATES[templateKey];
+    return {
+        stage: 'config',
+        template: templateKey,
+        ttx: JSON.parse(JSON.stringify(tpl.ttx)),
+        weapons: [],
+        name: '',
+        transponder: '',
+        custom_mods: '',
+        clearances: [],
+        config_fixed: false,
+        resources: {
+            energy: tpl.ttx.energy_sys,
+            hull:   tpl.ttx.hull,
+            shields: tpl.ttx.shields,
+            fuel:   tpl.ttx.fuel_cap,
+            cargo:  0
+        }
+    };
+}
+
+// ============================================================
+// РЕНДЕР
+// ============================================================
+function render() {
+    var s = getState();
+    if (!s) { renderSelect(); return; }
+    if (s.stage === 'select') { renderSelect(); return; }
+    if (s.stage === 'config') { renderConfig(s); return; }
+
+    // При загрузке: free=0, reserved>0 → тихий ребут
+    if (s.resources.energy === 0 && s.engine && s.engine.reserved > 0) {
+        s.resources.energy = s.engine.reserved;
+        s.engine.reserved = 0;
+        saveState(s);
+    }
+
+    renderCard(s);
+}
+
+function renderSelect() {
+    document.getElementById('shipTitle').innerHTML =
+        '🚀 ВЫБОР КОРАБЛЯ <span class="ship-badge">конфигурация не зафиксирована</span>';
+    document.getElementById('shipBody').innerHTML =
+        '<p style="color:#BBB;font-size:13px;margin-bottom:14px;">' +
+        'Выберите тип судна. После подтверждения изменить выбор можно будет ' +
+        'только сбросом.</p>' +
+        '<div class="ship-card-select-grid">' +
+        Object.keys(TEMPLATES).map(function(k) {
+            var t = TEMPLATES[k];
+            return '<div class="ship-card-select" data-tpl="' + k + '">' +
+                '<div class="ship-card-select-icon">' + t.icon + '</div>' +
+                '<div class="ship-card-select-name">' + k + '</div>' +
+                '<div class="ship-card-select-sub">' + t.subtitle + '</div>' +
+                '</div>';
+        }).join('') +
+        '</div>';
+    document.querySelectorAll('.ship-card-select').forEach(function(el) {
+        el.addEventListener('click', function() {
+            var k = el.getAttribute('data-tpl');
+            var s = newState(k);
+            saveState(s);
+            render();
+        });
+    });
+}
+
+// === КОНФИГУРАЦИЯ ТТХ ===
+var editMode = false;
+
+function renderConfig(s) {
+    var tpl = TEMPLATES[s.template];
+    var t = s.ttx;
+    document.getElementById('shipTitle').innerHTML =
+        tpl.icon + ' ' + s.template + ' <span class="ship-badge">конфигурация</span>';
+
+    var html = '';
+    html += '<div style="color:#888;font-size:12px;margin-bottom:12px;font-style:italic;">' + tpl.subtitle + '</div>';
+
+    html += '<div class="ship-block">';
+    html += '<div class="ship-block-title">Характеристики</div>';
+    html += ttxRow('atmo_speed', 'Скорость в атмосфере', 'до', 'км/ч', t.atmo_speed, editMode);
+    html += ttxRow('max_space', 'Max скорость в космосе', 'до', 'G', t.max_space, editMode);
+    html += ttxRow('avg_space', 'Средняя скорость в космосе', '', 'G', t.avg_space, editMode);
+    html += ttxRow('accel', 'Ускорение', '', 'G/s', t.accel, editMode);
+    html += ttxRow('maneuver', 'Маневренность', '', 'AG', t.maneuver, editMode);
+    html += ttxRow('shields', 'Щиты', '', 'ед', t.shields, editMode);
+    html += ttxRow('hull', 'Расчётная прочность', '', 'ед', t.hull, editMode);
+    html += ttxRow('crew', 'Экипаж', '', 'пилота', t.crew, editMode);
+    html += ttxRow('passengers', 'Пассажиры', '', 'человек', t.passengers, editMode);
+    html += ttxRow('cargo_cap', 'Грузоподъёмность', '', 'т', t.cargo_cap, editMode);
+    html += ttxRow('cargo_bays', 'Грузовые отсеки', '', '', t.cargo_bays, editMode);
+    html += ttxRow('escape_pods', 'Спасательные капсулы', '', '', t.escape_pods, editMode);
+    // энергоустановка
+    if (editMode) {
+        html += '<div class="ship-ttx-row"><span class="ship-ttx-label">Энергоустановка</span>' +
+            '<span class="ship-ttx-value">' + t.energy_sys_name + ' (<input type="number" data-ttx="energy_sys" value="' + t.energy_sys + '"> ед)</span></div>';
+    } else {
+        html += '<div class="ship-ttx-row"><span class="ship-ttx-label">Энергоустановка</span><span class="ship-ttx-value">' + t.energy_sys_name + ' (' + t.energy_sys + ' ед)</span></div>';
+    }
+    // nav/sens — dropdown
+    if (editMode) {
+        html += '<div class="ship-ttx-row"><span class="ship-ttx-label">Класс навигации</span>' +
+            '<span class="ship-ttx-value"><select data-ttx="nav_class">' +
+            ['A','B','C','D','E','F'].map(function(c){ return '<option value="'+c+'"'+(t.nav_class===c?' selected':'')+'>'+c+'</option>'; }).join('') +
+            '</select></span></div>';
+        html += '<div class="ship-ttx-row"><span class="ship-ttx-label">Класс сенсоров</span>' +
+            '<span class="ship-ttx-value"><select data-ttx="sens_class">' +
+            ['A','B','C','D','E','F'].map(function(c){ return '<option value="'+c+'"'+(t.sens_class===c?' selected':'')+'>'+c+'</option>'; }).join('') +
+            '</select></span></div>';
+    } else {
+        html += '<div class="ship-ttx-row"><span class="ship-ttx-label">Класс навигации</span><span class="ship-ttx-value">' + t.nav_class + '</span></div>';
+        html += '<div class="ship-ttx-row"><span class="ship-ttx-label">Класс сенсоров</span><span class="ship-ttx-value">' + t.sens_class + '</span></div>';
+    }
+    html += ttxRow('hyper_class', 'Класс гиперпривода', '', '', t.hyper_class, editMode);
+    html += ttxRow('hyper_range', 'Дальность прыжка', 'до', 'пк', t.hyper_range, editMode);
+    html += ttxRow('fuel_cap', 'Топливо', '', 'пк', t.fuel_cap, editMode);
+    html += ttxRow('maintenance', 'Обслуживание', '', 'кр / пк', t.maintenance, editMode);
+    html += '</div>';
+
+    // Оружие
+    html += '<div class="ship-block">';
+    html += '<div class="ship-block-title">Оружие</div>';
+    if (editMode) {
+        html += '<div style="margin-bottom:6px;">' +
+            '<select id="shipWeaponSelect" style="padding:5px 8px;background:rgba(20,20,30,0.9);border:1px solid #555;border-radius:3px;color:#E8E8E8;font-size:13px;">' +
+            tpl.weapons_pool.map(function(w){ return '<option>'+w+'</option>'; }).join('') +
+            '</select> ' +
+            '<button class="ship-res-btn" id="shipAddWeapon">+ Добавить</button></div>';
+        if (s.weapons.length) {
+            html += s.weapons.map(function(w, i) {
+                return '<div style="padding:4px 8px;background:rgba(0,0,0,0.3);border-left:2px solid #FFD700;margin-bottom:3px;font-size:12px;">' +
+                    '• ' + w + ' <span style="float:right;color:#FF8888;cursor:pointer;" data-wdel="' + i + '">✕</span></div>';
+            }).join('');
+        } else {
+            html += '<div style="color:#666;font-size:12px;font-style:italic;">—</div>';
+        }
+    } else {
+        html += s.weapons.length
+            ? s.weapons.map(function(w){ return '<div class="ship-ttx-row"><span class="ship-ttx-value">• ' + w + '</span></div>'; }).join('')
+            : '<div class="ship-ttx-row"><span class="ship-ttx-value">—</span></div>';
+    }
+    html += '</div>';
+
+    // Особые модификации
+    html += '<div class="ship-block">';
+    html += '<div class="ship-block-title">Особые модификации</div>';
+    if (editMode) {
+        html += '<textarea id="shipMods" style="width:100%;min-height:60px;padding:8px;background:rgba(20,20,30,0.9);border:1px solid #555;border-radius:4px;color:#E8E8E8;font-family:inherit;font-size:13px;box-sizing:border-box;resize:vertical;">' + (s.custom_mods || '') + '</textarea>';
+    } else {
+        html += s.custom_mods
+            ? '<div style="color:#BBB;font-size:13px;white-space:pre-wrap;">' + s.custom_mods + '</div>'
+            : '<div style="color:#666;font-size:12px;font-style:italic;">—</div>';
+    }
+    html += '</div>';
+
+    // Кнопки
+    html += '<div class="ship-actions">';
+    if (editMode) {
+        html += '<button class="ship-btn-main" id="shipSaveEdit">💾 Сохранить</button>';
+        html += '<button class="ship-btn-secondary" id="shipCancelEdit">↺ Отменить</button>';
+    } else {
+        html += '<button class="ship-btn-main" id="shipEditBtn">✏️ Модифицировать ТТХ</button>';
+        html += '<button class="ship-btn-main" id="shipConfirmBtn" style="background:rgba(80,220,120,0.15);border-color:#50DC78;color:#50DC78;">✅ Подтвердить конфигурацию</button>';
+    }
+    html += '</div>';
+
+    document.getElementById('shipBody').innerHTML = html;
+    bindConfigHandlers(s);
+}
+
+function ttxRow(key, label, prefix, suffix, value, editMode) {
+    var valHtml = editMode
+        ? '<input type="number" data-ttx="' + key + '" value="' + value + '">'
+        : value;
+    return '<div class="ship-ttx-row">' +
+        '<span class="ship-ttx-label">' + label + '</span>' +
+        '<span class="ship-ttx-value">' +
+        (prefix ? '<span class="ship-ttx-prefix">' + prefix + ' </span>' : '') +
+        valHtml +
+        (suffix ? '<span class="ship-ttx-suffix"> ' + suffix + '</span>' : '') +
+        '</span></div>';
+}
+
+function bindConfigHandlers(s) {
+    var editBtn = document.getElementById('shipEditBtn');
+    if (editBtn) editBtn.addEventListener('click', function() { editMode = true; render(); });
+
+    var cancelBtn = document.getElementById('shipCancelEdit');
+    if (cancelBtn) cancelBtn.addEventListener('click', function() { editMode = false; render(); });
+
+    var saveBtn = document.getElementById('shipSaveEdit');
+    if (saveBtn) saveBtn.addEventListener('click', function() {
+        document.querySelectorAll('[data-ttx]').forEach(function(el) {
+            var k = el.getAttribute('data-ttx');
+            var v = el.value;
+            if (k === 'nav_class' || k === 'sens_class') {
+                s.ttx[k] = v;
+            } else {
+                var num = parseFloat(v);
+                if (!isNaN(num)) s.ttx[k] = num;
+            }
+        });
+        var mods = document.getElementById('shipMods');
+        if (mods) s.custom_mods = mods.value;
+        saveState(s);
+        editMode = false;
+        render();
+    });
+
+    var addW = document.getElementById('shipAddWeapon');
+    if (addW) addW.addEventListener('click', function() {
+        var sel = document.getElementById('shipWeaponSelect');
+        if (!sel) return;
+        s.weapons.push(sel.value);
+        saveState(s);
+        render();
+    });
+    document.querySelectorAll('[data-wdel]').forEach(function(el) {
+        el.addEventListener('click', function() {
+            var i = parseInt(el.getAttribute('data-wdel'));
+            s.weapons.splice(i, 1);
+            saveState(s);
+            render();
+        });
+    });
+
+    var confirmBtn = document.getElementById('shipConfirmBtn');
+    if (confirmBtn) confirmBtn.addEventListener('click', function() {
+        s.config_fixed = true;
+        s.stage = 'card';
+        s.resources = {
+            energy: s.ttx.energy_sys,
+            hull: s.ttx.hull,
+            shields: s.ttx.shields,
+            fuel: s.ttx.fuel_cap,
+            cargo: 0
+        };
+        saveState(s);
+        render();
+    });
+}
+
+// === КАРТОЧКА ===
+function renderCard(s) {
+    if (!s.engine) s.engine = { reserved: 0, speed: 0 };
+    if (s.engine.heat === undefined) s.engine.heat = 0;
+    if (s.engine.overheated === undefined) s.engine.overheated = false;
+
+    var tpl = TEMPLATES[s.template];
+
+    document.getElementById('shipTitle').innerHTML =
+        tpl.icon + ' ' + (s.name || s.template) +
+        ' <span class="ship-badge">' + tpl.subtitle + '</span>';
+
+    var TABS = [
+        {id: 'main',    label: 'Главная'},
+        {id: 'ident',   label: 'Идентификация'},
+        {id: 'engine',  label: 'Двигатель'},
+        {id: 'config',  label: 'Конфигурация'},
+        {id: 'hyper',   label: 'Прыжок'},
+        {id: 'journal', label: 'Журнал'}
+    ];
+    var activeTab = window._shipTab || 'main';
+    var valid = TABS.some(function(x){ return x.id === activeTab; });
+    if (!valid) activeTab = 'main';
+
+    var html = '';
+    html += '<div class="ship-tabs">';
+    TABS.forEach(function(tb) {
+        html += '<button class="ship-tab' + (tb.id === activeTab ? ' active' : '') +
+            '" data-tab="' + tb.id + '">' + tb.label + '</button>';
+    });
+    html += '</div>';
+
+    if (activeTab === 'main')        html += buildMainTab(s, tpl);
+    else if (activeTab === 'ident')  html += buildIdentTab(s, tpl);
+    else if (activeTab === 'engine') html += buildEngineTab(s, tpl);
+    else if (activeTab === 'config') html += buildConfigTab(s, tpl);
+    else if (activeTab === 'hyper')  html += buildHyperTab(s, tpl);
+    else if (activeTab === 'journal')html += buildJournalTab();
+
+    document.getElementById('shipBody').innerHTML = html;
+    bindCardHandlers(s, tpl);
+    if (activeTab === 'journal') renderJournal();
+    updateLamp(s, tpl);
+}
+
+// ── Вкладки: содержимое ──
+
+function buildIdentTab(s, tpl) {
+    var html = '<div class="ship-block">';
+    html += '<div class="ship-block-title">Идентификация</div>';
+    html += '<div class="ship-field"><span class="ship-field-label">Название</span>' +
+        '<input type="text" id="shipName" value="' + (s.name || '') + '" placeholder="—"></div>';
+    html += '<div class="ship-field"><span class="ship-field-label">Транспондер</span>' +
+        '<input type="text" id="shipTransponder" value="' + (s.transponder || '') + '" placeholder="xxxx-xxxx-xxxx-xxxx"></div>';
+    html += '</div>';
+
+    html += '<div class="ship-block">';
+    html += '<div class="ship-block-title">Допуски</div>';
+    html += '<div class="ship-field">' +
+        '<input type="text" id="shipCodeInput" placeholder="Введите код допуска">' +
+        '<button class="ship-res-btn" id="shipAddCode">🔑 Ввести</button></div>';
+    if (s.clearances.length) {
+        html += '<div class="ship-clearance-list">' +
+            s.clearances.map(function(c) {
+                var st = getClrStyle(c.id);
+                return '<div class="ship-clearance-item" style="color:' + st.c + ';">' +
+                    '<span class="clr-id">' + c.id + '</span>' +
+                    '<span class="clr-name">' + c.name + '</span>' +
+                    '<span class="clr-tag">' + st.tag + '</span>' +
+                    '</div>';
+            }).join('') + '</div>';
+    } else {
+        html += '<div class="ship-clearance-empty">— нет допусков —</div>';
+    }
+    html += '</div>';
+    return html;
+}
+
+function buildEngineTab(s, tpl) {
+    var r = s.resources;
+    var available = r.energy + s.engine.reserved;
+    var mode = getEngineMode(tpl, s.ttx, s.engine.reserved);
+    var heat = s.engine.heat || 0;
+    var overheated = !!s.engine.overheated;
+
+    var inpDisabledAttr = overheated ? ' disabled' : '';
+    var inpOpacityStyle = overheated ? 'opacity:0.4;' : '';
+
+    var html = '';
+
+    // Инпут — нейтральный золотой, без цветовых подсказок режима
+    html += '<div class="ship-block">';
+    html += '<div class="ship-block-title">Управление двигателем</div>';
+    html += '<div style="text-align:center;padding:20px 0 10px;">';
+    html += '<div style="color:#888;font-size:11px;text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;">Резерв мощности</div>';
+    html += '<input type="number" id="engineEnergyInput" value="' + s.engine.reserved + '"' +
+        ' min="0" max="' + available + '" step="1"' + inpDisabledAttr +
+        ' style="width:140px;padding:14px 10px;font-size:36px;text-align:center;font-family:monospace;' +
+        'background:rgba(20,20,30,0.9);border:2px solid #FFD700;border-radius:10px;' +
+        'color:#FFD700;outline:none;box-shadow:0 0 20px rgba(255,215,0,0.2);' + inpOpacityStyle + '">';
+    html += '<div style="color:#888;font-size:12px;margin-top:14px;">из <b style="color:#E8E8E8;">' + available + '</b> доступной</div>';
+    html += '</div>';
+    html += '</div>';
+
+    // Перегрев — по-прежнему с цветом, это отдельная механика
+    var showHeat = (heat > 0) || (mode.mode === 'green') || (mode.mode === 'blue') || overheated;
+    var heatDisplay = showHeat ? '' : 'display:none;';
+
+    var heatColor, heatText, heatTextColor;
+    if (overheated) {
+        heatColor = '#E53935'; heatText = 'ПЕРЕГРЕВ · охлаждение'; heatTextColor = '#E53935';
+    } else if (heat >= 90) {
+        heatColor = '#E53935'; heatText = 'КРИТИЧЕСКИЙ НАГРЕВ · ' + heat.toFixed(1) + '%'; heatTextColor = '#E53935';
+    } else if (heat >= 70) {
+        heatColor = '#F97316'; heatText = 'ОПАСНЫЙ НАГРЕВ · ' + heat.toFixed(1) + '%'; heatTextColor = '#F97316';
+    } else if (heat >= 40) {
+        heatColor = '#FBBF24'; heatText = heat.toFixed(1) + '%'; heatTextColor = '#FBBF24';
+    } else if (heat > 0) {
+        heatColor = '#22C55E'; heatText = heat.toFixed(1) + '%'; heatTextColor = '#22C55E';
+    } else {
+        heatColor = '#22C55E'; heatText = '0% · стабильно'; heatTextColor = '#666';
+    }
+
+    var pulseAnim = (heat >= 70 || overheated) ? 'animation:engineHeatPulse 0.8s ease-in-out infinite;' : '';
+
+    html += '<div class="ship-block" id="engineHeatBlock" style="' + heatDisplay + '">';
+    html += '<div class="ship-block-title">Перегрев двигателя</div>';
+    html += '<div style="margin-bottom:8px;">';
+    html += '<span id="engineHeatStatus" style="color:' + heatTextColor + ';font-size:12px;font-family:monospace;font-weight:bold;letter-spacing:0.5px;">' + heatText + '</span>';
+    html += '</div>';
+    html += '<div style="height:14px;background:#1a1a22;border:1px solid #333;border-radius:4px;overflow:hidden;">';
+    html += '<div id="engineHeatFill" style="height:100%;width:' + heat + '%;background:' + heatColor + ';transition:width 0.15s linear;box-shadow:0 0 10px ' + heatColor + ';' + pulseAnim + '"></div>';
+    html += '</div>';
+    html += '</div>';
+
+    return html;
+}
+
+function buildConfigTab(s, tpl) {
+    var t = s.ttx;
+    var html = '';
+
+    html += '<div class="ship-block">';
+    html += '<div class="ship-block-title">Характеристики</div>';
+    html += '<div class="ship-ttx-row"><span class="ship-ttx-label">Скорость в атмосфере</span><span class="ship-ttx-value">до ' + t.atmo_speed + ' км/ч</span></div>';
+    html += '<div class="ship-ttx-row"><span class="ship-ttx-label">Max скорость в космосе</span><span class="ship-ttx-value">до ' + t.max_space + ' G</span></div>';
+    html += '<div class="ship-ttx-row"><span class="ship-ttx-label">Средняя скорость</span><span class="ship-ttx-value">' + t.avg_space + ' G</span></div>';
+    html += '<div class="ship-ttx-row"><span class="ship-ttx-label">Ускорение</span><span class="ship-ttx-value">' + t.accel + ' G/s</span></div>';
+    html += '<div class="ship-ttx-row"><span class="ship-ttx-label">Маневренность</span><span class="ship-ttx-value">' + t.maneuver + ' AG</span></div>';
+    html += '<div class="ship-ttx-row"><span class="ship-ttx-label">Щиты</span><span class="ship-ttx-value">' + t.shields + ' ед</span></div>';
+    html += '<div class="ship-ttx-row"><span class="ship-ttx-label">Прочность</span><span class="ship-ttx-value">' + t.hull + ' ед</span></div>';
+    html += '<div class="ship-ttx-row"><span class="ship-ttx-label">Экипаж</span><span class="ship-ttx-value">' + t.crew + ' пилота</span></div>';
+    html += '<div class="ship-ttx-row"><span class="ship-ttx-label">Пассажиры</span><span class="ship-ttx-value">' + t.passengers + ' чел</span></div>';
+    html += '<div class="ship-ttx-row"><span class="ship-ttx-label">Грузоподъёмность</span><span class="ship-ttx-value">' + t.cargo_cap + ' т</span></div>';
+    html += '<div class="ship-ttx-row"><span class="ship-ttx-label">Грузовые отсеки</span><span class="ship-ttx-value">' + t.cargo_bays + '</span></div>';
+    html += '<div class="ship-ttx-row"><span class="ship-ttx-label">Спасательные капсулы</span><span class="ship-ttx-value">' + t.escape_pods + '</span></div>';
+    html += '<div class="ship-ttx-row"><span class="ship-ttx-label">Энергоустановка</span><span class="ship-ttx-value">' + t.energy_sys_name + ' (' + t.energy_sys + ' ед)</span></div>';
+    html += '<div class="ship-ttx-row"><span class="ship-ttx-label">Класс навигации</span><span class="ship-ttx-value">' + t.nav_class + '</span></div>';
+    html += '<div class="ship-ttx-row"><span class="ship-ttx-label">Класс сенсоров</span><span class="ship-ttx-value">' + t.sens_class + '</span></div>';
+    html += '<div class="ship-ttx-row"><span class="ship-ttx-label">Класс гиперпривода</span><span class="ship-ttx-value">' + t.hyper_class + '</span></div>';
+    html += '<div class="ship-ttx-row"><span class="ship-ttx-label">Дальность прыжка</span><span class="ship-ttx-value">до ' + t.hyper_range + ' пк</span></div>';
+    html += '<div class="ship-ttx-row"><span class="ship-ttx-label">Топливо</span><span class="ship-ttx-value">' + t.fuel_cap + ' пк</span></div>';
+    html += '<div class="ship-ttx-row"><span class="ship-ttx-label">Обслуживание</span><span class="ship-ttx-value">' + t.maintenance + ' кр/пк</span></div>';
+    html += '</div>';
+
+    html += '<div class="ship-block">';
+    html += '<div class="ship-block-title">Оружие</div>';
+    if (s.weapons.length) {
+        html += s.weapons.map(function(w){
+            return '<div class="ship-ttx-row"><span class="ship-ttx-value">• ' + w + '</span></div>';
+        }).join('');
+    } else {
+        html += '<div class="ship-ttx-row"><span class="ship-ttx-value">—</span></div>';
+    }
+    html += '</div>';
+
+    html += '<div class="ship-block">';
+    html += '<div class="ship-block-title">Особые модификации</div>';
+    if (s.custom_mods) {
+        html += '<div style="color:#BBB;font-size:13px;white-space:pre-wrap;">' + s.custom_mods + '</div>';
+    } else {
+        html += '<div style="color:#666;font-size:12px;font-style:italic;">—</div>';
+    }
+    html += '</div>';
+
+    html += '<div class="ship-block">';
+    html += '<div class="ship-block-title">Управление</div>';
+    html += '<button class="ship-btn-secondary" id="shipResetBtn" style="width:100%;">🔄 Сбросить корабль</button>';
+    html += '</div>';
+
+    return html;
+}
+
+
+
+function buildHyperTab(s, tpl) {
+    var html = '<div class="ship-block">';
+    html += '<div class="ship-block-title">Прыжок</div>';
+    html += '<button class="ship-btn-main" id="shipHyperBtn">🌌 Гиперпрыжок</button>';
+    html += '</div>';
+    return html;
+}
+
+function buildJournalTab() {
+    var html = '<div class="ship-block">';
+    html += '<div class="ship-block-title">Новая запись</div>';
+    html += '<div class="journal-new">' +
+        '<textarea id="journalInput" placeholder="Что везём, куда летим, важные контакты..."></textarea>' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+        '<span class="journal-hint">Ctrl+Enter — добавить</span>' +
+        '<button class="ship-btn-main" id="journalAdd">＋ Добавить</button>' +
+        '</div></div>';
+    html += '</div>';
+
+    html += '<div class="ship-block">';
+    html += '<div class="ship-block-title">Записи</div>';
+    html += '<div id="journalList"></div>';
+    html += '</div>';
+    return html;
+}
+
+function buildMainTab(s, tpl) {
+    var r = s.resources;
+    var t = s.ttx;
+    var mode = getEngineMode(tpl, s.ttx, s.engine.reserved);
+    var speedRound = Math.round(s.engine.speed);
+    var forsageClass = (mode.mode === 'blue') ? ' is-forsage' : '';
+
+    var html = '';
+
+    // Двигатель — лампа + скорость
+    html += '<div class="ship-block">';
+    html += '<div class="ship-block-title">Двигатель</div>';
+    html += '<div class="engine-display">' +
+        '<div class="engine-lamp ' + mode.mode + '" id="engineLamp"></div>' +
+        '<div class="engine-speed' + forsageClass + '" id="engineSpeed">' + speedRound + '</div>' +
+        '<div class="engine-speed-unit">G</div>' +
+        '</div>';
+    html += '</div>';
+
+    // Ресурсы
+    html += '<div class="ship-block">';
+    html += '<div class="ship-block-title">Ресурсы</div>';
+    html += resRow('energy',  '⚡', 'Энергия',    r.energy,  getResourceMax('energy', tpl, s), '#00BFFF', '⚡ Зарядить');
+    html += resRow('hull',    '🛡', 'Прочность',  r.hull,    t.hull,     '#F57C00', '🔧 Починить');
+    html += resRow('shields', '💠', 'Щиты',       r.shields, t.shields,  '#8B5CF6', '💠 Восстановить');
+    html += resRow('fuel',    '⛽', 'Топливо',    r.fuel,    t.fuel_cap, '#7CB342', '⛽ Заправить');
+    html += resRow('cargo',   '📦', 'Груз',       r.cargo,   t.cargo_cap,'#C9A227', '📦 Изменить');
+    html += '</div>';
+
+    // Дефлекторные щиты — заглушка на будущее
+    html += '<div class="ship-block">';
+    html += '<div class="ship-block-title">Дефлекторные щиты</div>';
+    html += resRow('deflector', '⬡', 'Дефлекторы', 0, 0, '#06B6D4', '⬡ Настроить', true);
+    html += '<div style="color:#666;font-size:11px;font-style:italic;text-align:center;margin-top:4px;">— будет добавлено —</div>';
+    html += '</div>';
+
+    // Сброс
+    html += '<div class="ship-block">';
+    html += '<div class="ship-block-title">Управление</div>';
+    html += '<button class="ship-btn-secondary" id="shipResetBtn" style="width:100%;">🔄 Сбросить корабль</button>';
+    html += '</div>';
+
+    return html;
+}
+
+// Цветовые стили допусков
+function getClrStyle(id) {
+    if (id.indexOf('AUR+') === 0) return { c: '#E879F9', tag: 'СПЕЦ·РАСШ' };
+    if (id.indexOf('AUR')  === 0) return { c: '#C084FC', tag: 'СПЕЦ' };
+    if (id === 'W5')              return { c: '#EF4444', tag: 'ВОЕН' };
+    if (id === 'D5')              return { c: '#3B82F6', tag: 'ДИПЛ' };
+    if (id === 'P0')              return { c: '#22D3EE', tag: 'ЛИЦЕНЗ' };
+    if (id.indexOf('Y')    === 0) return { c: '#FFD700', tag: 'ЦЕНТР' };
+    if (id.indexOf('G')    === 0) return { c: '#94A3B8', tag: 'ВНЕШН' };
+    if (id.indexOf('J')    === 0) return { c: '#50DC78', tag: 'СРЕДН' };
+    return { c: '#888', tag: '' };
+}
+
+// Максимум ресурса с учётом резерва двигателя
+function getResourceMax(k, tpl, s) {
+    if (!s || !s.ttx) return 0;
+    if (k === 'energy') return s.ttx.energy_sys - (s.engine ? s.engine.reserved : 0);
+    if (k === 'hull')   return s.ttx.hull;
+    if (k === 'shields')return s.ttx.shields;
+    if (k === 'fuel')   return s.ttx.fuel_cap;
+    if (k === 'cargo')  return s.ttx.cargo_cap;
+    return 0;
+}
+
+// Режим двигателя — пороги из шаблона (engine_modes)
+function getEngineMode(tpl, ttx, reserved) {
+    var em = tpl.engine_modes || { min: 1, orange_max: 1, yellow_max: 2, green_max: 3 };
+    var avg = (ttx && ttx.avg_space) || 0;
+    var max = (ttx && ttx.max_space) || 0;
+
+    if (!reserved || reserved < em.min) {
+        return { mode: 'off', accelMult: 0, speedTarget: 0 };
+    }
+    if (reserved <= em.orange_max) {
+        return { mode: 'orange', accelMult: 0.25, speedTarget: 0.75 * avg };
+    }
+    if (reserved <= em.yellow_max) {
+        return { mode: 'yellow', accelMult: 0.50, speedTarget: avg };
+    }
+    if (reserved <= em.green_max) {
+        return { mode: 'green',  accelMult: 0.50, speedTarget: max };
+    }
+    return { mode: 'blue', accelMult: 1.00, speedTarget: max };
+}
+
+function resRow(key, icon, label, cur, max, color, btnLabel, disabled) {
+    var pct = max > 0 ? Math.min(100, (cur / max) * 100) : 0;
+    var btnId = 'resBtn_' + key;
+    var numsText = max > 0 ? cur + ' / ' + max : '—';
+    var btnAttr = disabled ? ' disabled' : '';
+    return '<div class="ship-res-row">' +
+        '<span class="ship-res-icon">' + icon + '</span>' +
+        '<span class="ship-res-name">' + label + '</span>' +
+        '<div class="ship-res-bar-wrap">' +
+            '<div class="ship-res-bar"><div class="ship-res-bar-fill" style="width:' + pct + '%;background:' + color + ';"></div></div>' +
+            '<div class="ship-res-nums">' + numsText + '</div>' +
+        '</div>' +
+        '<div><button class="ship-res-btn" id="' + btnId + '"' + btnAttr + '>' + btnLabel + '</button></div>' +
+        '</div>';
+}
+
+
+
+function bindCardHandlers(s, tpl) {
+    // Вкладки
+    document.querySelectorAll('.ship-tab').forEach(function(el) {
+        el.addEventListener('click', function() {
+            window._shipTab = el.getAttribute('data-tab');
+            render();
+        });
+    });
+
+    // name / transponder — автосохранение
+    var nameInp = document.getElementById('shipName');
+    if (nameInp) {
+        nameInp.addEventListener('change', function() {
+            s.name = nameInp.value.trim();
+            saveState(s);
+            document.getElementById('shipTitle').innerHTML =
+                tpl.icon + ' ' + (s.name || s.template) +
+                ' <span class="ship-badge">' + tpl.subtitle + '</span>';
+        });
+    }
+    var transpInp = document.getElementById('shipTransponder');
+    if (transpInp) {
+        transpInp.addEventListener('change', function() {
+            s.transponder = transpInp.value.trim();
+            saveState(s);
+        });
+    }
+
+    // Резерв двигателя
+    var engInp = document.getElementById('engineEnergyInput');
+    if (engInp) {
+        engInp.addEventListener('change', function() {
+            var s2 = getState();
+            if (!s2) return;
+            if (!s2.engine) s2.engine = { reserved: 0, speed: 0 };
+            if (s2.engine.overheated) {
+                engInp.value = 0;
+                return;
+            }
+            var available2 = s2.resources.energy + s2.engine.reserved;
+            var oldFree = s2.resources.energy;
+            var v = parseFloat(engInp.value);
+            if (isNaN(v) || v < 0) v = 0;
+            v = Math.round(v);
+            if (v > available2) v = available2;
+
+            var newFree = available2 - v;
+
+            if (newFree === 0 && v > 0) {
+                // DEAD: сначала алерт, state НЕ меняем (применится при «Понял»)
+                pendingReboot = true;
+                engInp.value = s2.engine.reserved;
+                showAlert('dead');
+                return;
+            }
+
+            s2.engine.reserved = v;
+            s2.resources.energy = newFree;
+            saveState(s2);
+
+            // WARN: один раз при пересечении порога сверху вниз
+            if (oldFree >= tpl.crit_energy && newFree < tpl.crit_energy && newFree > 0) {
+                showAlert('warn');
+            }
+
+            render();
+        });
+    }
+
+    // Кнопки у полей
+    ['energy','hull','shields','fuel','cargo'].forEach(function(k) {
+        var btn = document.getElementById('resBtn_' + k);
+        if (!btn) return;
+        btn.addEventListener('click', function() { openResourceModal(k, s, tpl); });
+    });
+
+    // Допуски
+    var addCodeBtn = document.getElementById('shipAddCode');
+    if (addCodeBtn) {
+        addCodeBtn.addEventListener('click', function() {
+            var inp = document.getElementById('shipCodeInput');
+            if (!inp) return;
+            var code = inp.value.trim();
+            if (!code) return;
+            var match = CODES[code];
+            if (match) {
+                if (!s.clearances.some(function(c){ return c.id === match.id; })) {
+                    s.clearances.push({ id: match.id, name: match.name });
+                    saveState(s);
+                    render();
+                } else {
+                    inp.value = '';
+                    inp.placeholder = 'Этот допуск уже есть';
+                }
+            } else {
+                inp.value = '';
+                inp.placeholder = 'Код не распознан';
+            }
+        });
+    }
+
+    // Гиперпрыжок
+    var hyperBtn = document.getElementById('shipHyperBtn');
+    if (hyperBtn) {
+        hyperBtn.addEventListener('click', function() { openHyperModal(s, tpl); });
+    }
+
+    // Сброс
+    var resetBtn = document.getElementById('shipResetBtn');
+    if (resetBtn) {
+        resetBtn.addEventListener('click', function() {
+            if (!confirm('Сбросить корабль и начать заново?\nВсе настройки будут потеряны.')) return;
+            clearState();
+            render();
+        });
+    }
+
+    // Журнал
+    var jAdd = document.getElementById('journalAdd');
+    var jInp = document.getElementById('journalInput');
+    if (jAdd) jAdd.addEventListener('click', addJournalEntry);
+    if (jInp) {
+        jInp.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                addJournalEntry();
+            }
+        });
+    }
+}
+
+// === АНИМАЦИЯ СКОРОСТИ ===
+var engineTimer = null;
+var pendingReboot = false;
+
+function startEngineSimulation() {
+    if (engineTimer) return;
+    engineTimer = setInterval(engineTick, 100);
+}
+
+var _lastHeatTick = 0;
+
+function engineTick() {
+    var s = getState();
+    if (!s) return;
+    var tpl = TEMPLATES[s.template];
+    if (!tpl) return;
+    if (!s.engine) s.engine = { reserved: 0, speed: 0 };
+    if (s.engine.heat === undefined) s.engine.heat = 0;
+    if (s.engine.overheated === undefined) s.engine.overheated = false;
+    if (s.stage !== 'card') return;
+
+    // Если перегрев — принудительно reserved = 0 (энергия возвращается в free)
+    if (s.engine.overheated && s.engine.reserved > 0) {
+        s.resources.energy += s.engine.reserved;
+        s.engine.reserved = 0;
+    }
+
+    var mode = getEngineMode(tpl, s.ttx, s.engine.reserved);
+    var target = mode.speedTarget;
+    var diff = target - s.engine.speed;
+    var changed = false;
+
+    // Физика скорости
+    if (Math.abs(diff) < 0.01) {
+        if (s.engine.speed !== target) { s.engine.speed = target; changed = true; }
+    } else {
+        var rate;
+        if (diff < 0) {
+            rate = tpl.brake_accel || 50;
+        } else {
+            rate = (s.ttx.accel || 100) * mode.accelMult;
+        }
+        var step = rate * 0.1;
+        if (Math.abs(diff) <= step) {
+            s.engine.speed = target;
+        } else {
+            s.engine.speed += (diff > 0 ? 1 : -1) * step;
+        }
+        changed = true;
+    }
+
+    // Физика перегрева
+    var now = Date.now();
+    var dt = _lastHeatTick ? Math.min(1, (now - _lastHeatTick) / 1000) : 0.1;
+    _lastHeatTick = now;
+
+    var heat = s.engine.heat || 0;
+    var isHot = (mode.mode === 'green' || mode.mode === 'blue');
+    var wasOverheated = !!s.engine.overheated;
+
+    if (isHot && !wasOverheated) {
+        heat += 0.25 * dt;             // нагрев 0.25%/сек
+    } else if (heat > 0) {
+        heat -= 0.5 * dt;              // охлаждение 0.5%/сек
+    }
+    heat = Math.max(0, Math.min(100, heat));
+
+    // Триггер перегрева
+    if (!wasOverheated) {
+        if (heat >= 100) {
+            s.engine.overheated = true;
+        } else if (heat >= 70 && isHot) {
+            var chance = 0.005 * dt;   // 0.5% в секунду
+            if (Math.random() < chance) {
+                s.engine.overheated = true;
+            }
+        }
+    }
+
+    // Перегрев снят — только когда heat дошёл до 0
+    if (wasOverheated && heat <= 0) {
+        s.engine.overheated = false;
+        heat = 0;
+    }
+
+    if (heat !== s.engine.heat) changed = true;
+    s.engine.heat = heat;
+
+    if (changed) {
+        var spEl = document.getElementById('engineSpeed');
+        if (spEl) {
+            spEl.textContent = Math.round(s.engine.speed);
+            if (mode.mode === 'blue') spEl.classList.add('is-forsage');
+            else spEl.classList.remove('is-forsage');
+        }
+        saveState(s);
+    }
+
+    // Плавное обновление UI перегрева (без re-render)
+    updateHeatDOM(heat, mode.mode, s.engine.overheated);
+
+    // Транзишн перегрева (вкл/выкл) → перерендер вкладки
+    if (wasOverheated !== s.engine.overheated) {
+        saveState(s);
+        render();
+    }
+}
+
+function updateHeatDOM(heat, modeStr, overheated) {
+    var block = document.getElementById('engineHeatBlock');
+    if (!block) return;
+
+    var shouldShow = (heat > 0) || (modeStr === 'green') || (modeStr === 'blue') || overheated;
+    block.style.display = shouldShow ? 'block' : 'none';
+    if (!shouldShow) return;
+
+    var color;
+    if (overheated) color = '#E53935';
+    else if (heat >= 90) color = '#E53935';
+    else if (heat >= 70) color = '#F97316';
+    else if (heat >= 40) color = '#FBBF24';
+    else color = '#22C55E';
+
+    var fill = document.getElementById('engineHeatFill');
+    if (fill) {
+        fill.style.width = heat + '%';
+        fill.style.background = color;
+        fill.style.boxShadow = '0 0 10px ' + color;
+        if (heat >= 70 || overheated) {
+            fill.style.animation = 'engineHeatPulse 0.8s ease-in-out infinite';
+        } else {
+            fill.style.animation = '';
+        }
+    }
+
+    var txt = document.getElementById('engineHeatStatus');
+    if (txt) {
+        if (overheated) {
+            txt.textContent = 'ПЕРЕГРЕВ · охлаждение';
+            txt.style.color = '#E53935';
+        } else if (heat >= 90) {
+            txt.textContent = 'КРИТИЧЕСКИЙ НАГРЕВ · ' + heat.toFixed(1) + '%';
+            txt.style.color = '#E53935';
+        } else if (heat >= 70) {
+            txt.textContent = 'ОПАСНЫЙ НАГРЕВ · ' + heat.toFixed(1) + '%';
+            txt.style.color = '#F97316';
+        } else if (heat > 0) {
+            txt.textContent = heat.toFixed(1) + '%';
+            txt.style.color = '#FBBF24';
+        } else {
+            txt.textContent = '0% · стабильно';
+            txt.style.color = '#666';
+        }
+    }
+}
+
+function updateLamp(s, tpl) {
+    var lamp = document.getElementById('shipLamp');
+    var box = document.getElementById('shipBox');
+    var energy = s.resources.energy;
+    box.classList.remove('ship-warn', 'ship-dead');
+    lamp.classList.remove('warn', 'dead');
+    if (energy === 0) {
+        box.classList.add('ship-dead');
+        lamp.classList.add('dead');
+    } else if (energy < tpl.crit_energy) {
+        box.classList.add('ship-warn');
+        lamp.classList.add('warn');
+    }
+}
+
+// === МОДАЛКА РЕСУРСА ===
+var currentResKey = null;
+function openResourceModal(k, s, tpl) {
+    currentResKey = k;
+    var max = getResourceMax(k, tpl, s);
+    var labels = { energy:'Зарядить энергию', hull:'Починить корпус', shields:'Восстановить щиты', fuel:'Заправить топливо', cargo:'Изменить груз' };
+    document.getElementById('shipMiniTitle').textContent = labels[k] || k;
+    document.getElementById('shipMiniMax').textContent = '/ ' + max;
+    var inp = document.getElementById('shipMiniInput');
+    inp.value = s.resources[k];
+    inp.max = max;
+    document.getElementById('shipMiniErr').textContent = '';
+    document.getElementById('shipMiniOverlay').classList.add('visible');
+    setTimeout(function(){ inp.focus(); }, 100);
+}
+function closeResourceModal() {
+    document.getElementById('shipMiniOverlay').classList.remove('visible');
+    currentResKey = null;
+}
+function applyResourceModal() {
+    if (!currentResKey) return;
+    var s = getState(); if (!s) return;
+    if (!s.engine) s.engine = { reserved: 0, speed: 0 };
+    var tpl = TEMPLATES[s.template];
+    var max = getResourceMax(currentResKey, tpl, s);
+    var v = parseFloat(document.getElementById('shipMiniInput').value);
+    if (isNaN(v) || v < 0) { document.getElementById('shipMiniErr').textContent = 'Введите число ≥ 0'; return; }
+    if (v > max) { document.getElementById('shipMiniErr').textContent = 'Максимум: ' + max; return; }
+    s.resources[currentResKey] = v;
+    saveState(s);
+    closeResourceModal();
+    render();
+}
+
+// === ГИПЕРПРЫЖОК ===
+function openHyperModal(s, tpl) {
+    var body = document.getElementById('shipHyperBody');
+    body.innerHTML =
+        '<div class="ship-hyper-field"><label>Система назначения</label>' +
+        '<input type="text" id="hyperSystem" placeholder="Название системы"></div>' +
+        '<div class="ship-hyper-field"><label>Расстояние</label>' +
+        '<input type="number" id="hyperDist" value="1" min="1" step="1"></div>' +
+        '<div class="ship-actions">' +
+        '<button class="ship-btn-main" id="hyperStartBtn">🚀 Совершить гиперпрыжок</button>' +
+        '<button class="ship-btn-secondary" id="hyperCancelBtn">Отмена</button>' +
+        '</div>';
+    document.getElementById('shipHyperOverlay').classList.add('visible');
+
+    document.getElementById('hyperStartBtn').addEventListener('click', function() {
+        var dist = parseInt(document.getElementById('hyperDist').value, 10);
+        var sys = document.getElementById('hyperSystem').value.trim();
+        if (isNaN(dist) || dist < 1) {
+            alert('Введите расстояние (целое число ≥ 1)');
+            return;
+        }
+        startHyperDelay(s, tpl, dist, sys);
+    });
+    document.getElementById('hyperCancelBtn').addEventListener('click', function() {
+        document.getElementById('shipHyperOverlay').classList.remove('visible');
+    });
+}
+
+function hyperError(reason) {
+    var body = document.getElementById('shipHyperBody');
+    var title, text;
+    if (reason === 'energy') {
+        title = 'НЕХВАТКА МОЩНОСТИ';
+        text = 'Силовая установка не может обеспечить переход на сверхсветовую.';
+    } else {
+        title = 'КРИТИЧЕСКИЙ УРОВЕНЬ ТОПЛИВА';
+        text = 'Бортовой компьютер фиксирует недостаток топлива для совершения перехода.';
+    }
+    body.innerHTML =
+        '<div class="ship-hyper-error">' +
+        '<div class="ship-hyper-error-icon">⚠</div>' +
+        '<div class="ship-hyper-error-title">' + title + '</div>' +
+        '<div class="ship-hyper-error-text">' + text + '</div>' +
+        '<button class="ship-btn-main" id="hyperBackBtn">↺ Вернуться</button>' +
+        '</div>';
+    document.getElementById('hyperBackBtn').addEventListener('click', function() {
+        document.getElementById('shipHyperOverlay').classList.remove('visible');
+    });
+}
+
+function startHyperDelay(s, tpl, dist, sys) {
+    var body = document.getElementById('shipHyperBody');
+    var sec = NAV_SEC[s.ttx.nav_class] || 30;
+    body.innerHTML =
+        '<div class="ship-hyper-loading">' +
+        '<div class="ship-hyper-loading-icon">⚙</div>' +
+        '<div class="ship-hyper-loading-text">Бортовой компьютер рассчитывает курс...</div>' +
+        '<div class="ship-hyper-bar"><div class="ship-hyper-bar-fill" id="hyperBarFill"></div></div>' +
+        '</div>';
+
+    var start = Date.now();
+    var timer = setInterval(function() {
+        var elapsed = (Date.now() - start) / 1000;
+        var pct = Math.min(100, (elapsed / sec) * 100);
+        var fill = document.getElementById('hyperBarFill');
+        if (fill) fill.style.width = pct + '%';
+        if (elapsed >= sec) {
+            clearInterval(timer);
+            if (s.resources.energy < tpl.hyper_energy) { hyperError('energy'); return; }
+            if (s.resources.fuel < dist)                { hyperError('fuel');   return; }
+            finishHyper(s, tpl, dist, sys);
+        }
+    }, 80);
+}
+
+function finishHyper(s, tpl, dist, sys) {
+    // Расчёт энергии с погрешностью ±15%
+    var req = tpl.hyper_energy;
+    var min = Math.floor(req * 0.85);
+    var max = Math.ceil(req * 1.15);
+    var consumed = min + Math.floor(Math.random() * (max - min + 1));
+    s.resources.energy = Math.max(0, s.resources.energy - consumed);
+    s.resources.fuel = Math.max(0, s.resources.fuel - dist);
+    saveState(s);
+
+    var body = document.getElementById('shipHyperBody');
+    body.innerHTML =
+        '<div class="ship-hyper-success">' +
+        '<div class="ship-hyper-success-icon">✦ ✦ ✦ ✦ ✦</div>' +
+        '<div class="ship-hyper-success-title">ПЕРЕХОД НА СВЕРХСВЕТОВУЮ</div>' +
+        '<div class="ship-hyper-success-text">' +
+        (sys ? 'Курс на «' + sys + '» проложен.' : 'Курс проложен.') +
+        '<br>Прыжок через ' + dist + ' парсек.' +
+        '</div>' +
+        '<button class="ship-btn-main" id="hyperArriveBtn">✅ Отправиться в систему</button>' +
+        '</div>';
+    document.getElementById('hyperArriveBtn').addEventListener('click', function() {
+        document.getElementById('shipHyperOverlay').classList.remove('visible');
+        playWarpEffect(function() {
+            var s2 = getState();
+            var tpl2 = TEMPLATES[s2.template];
+
+            // Dead: сначала алерт, ребут — по «Понял»
+            if (s2.resources.energy === 0 && s2.engine && s2.engine.reserved > 0) {
+                pendingReboot = true;
+                showAlert('dead');
+                return;
+            }
+
+            render();
+            if (s2.resources.energy === 0) {
+                showAlert('dead');
+            } else if (s2.resources.energy < tpl2.crit_energy) {
+                showAlert('warn');
+            }
+        });
+    });
+}
+
+function showAlert(type) {
+    var ov = document.getElementById('shipAlertOverlay');
+    ov.classList.remove('ship-alert-warn', 'ship-alert-dead');
+    ov.classList.add(type === 'dead' ? 'ship-alert-dead' : 'ship-alert-warn');
+    ov.classList.add('visible');
+
+    if (type === 'dead') {
+        document.getElementById('shipAlertIcon').textContent = '☠';
+        document.getElementById('shipAlertTitle').textContent = 'КОРАБЛЬ ОБЕСТОЧЕН';
+        document.getElementById('shipAlertText').innerHTML =
+            'Основной генератор отключён.<br>Резервный энергогенератор обеспечит работу системы жизнеобеспечения.<br><br>' +
+            'Время автономной работы: <b>около 12 часов</b>';
+        document.getElementById('shipAlertSystems').innerHTML =
+            '<div class="sys-ok">✅ Жизнеобеспечение</div>' +
+            '<div class="sys-ok">✅ Аварийное освещение</div>' +
+            '<div class="sys-ok">✅ Аварийная связь</div>' +
+            '<div class="sys-off">❌ Досветовой двигатель</div>' +
+            '<div class="sys-off">❌ Гипердвигатель</div>' +
+            '<div class="sys-off">❌ Навигация</div>' +
+            '<div class="sys-off">❌ Щиты</div>' +
+            '<div class="sys-off">❌ Сенсоры</div>' +
+            '<div class="sys-off">❌ Оружие</div>' +
+            '<div class="sys-off">❌ Искусственная гравитация</div>' +
+            '<div class="sys-off">❌ Система стыковки</div>' +
+            '<div class="sys-off">❌ Медицинский отсек</div>' +
+            '<div class="sys-off">❌ Голографические проекторы</div>';
+    } else {
+        document.getElementById('shipAlertIcon').textContent = '⚠';
+        document.getElementById('shipAlertTitle').textContent = 'КРИТИЧЕСКОЕ ПАДЕНИЕ МОЩНОСТИ';
+        var s = getState();
+        var tpl = TEMPLATES[s.template];
+        document.getElementById('shipAlertText').innerHTML =
+            'Энергия: <b>' + s.resources.energy + ' ед</b><br>' +
+            'Силовая установка работает на пределе.';
+        document.getElementById('shipAlertSystems').innerHTML =
+            '<div class="sys-ok">✅ Досветовой двигатель</div>' +
+            '<div class="sys-ok">✅ Жизнеобеспечение</div>' +
+            '<div class="sys-ok">✅ Аварийное освещение</div>' +
+            '<div class="sys-ok">✅ Аварийная связь</div>' +
+            '<div class="sys-off">❌ Гипердвигатель</div>' +
+            '<div class="sys-off">❌ Навигация</div>' +
+            '<div class="sys-off">❌ Щиты</div>' +
+            '<div class="sys-off">❌ Сенсоры</div>' +
+            '<div class="sys-off">❌ Оружие</div>' +
+            '<div class="sys-off">❌ Искусственная гравитация (частично)</div>' +
+            '<div class="sys-off">❌ Система стыковки</div>' +
+            '<div class="sys-off">❌ Медицинский отсек (аварийный режим)</div>' +
+            '<div class="sys-off">❌ Голографические проекторы</div>';
+    }
+}
+
+// === WARP-ЭФФЕКТ ===
+function playWarpEffect(callback) {
+    var ov = document.getElementById('warpOverlay');
+    var stars = document.getElementById('warpStars');
+    stars.innerHTML = '';
+    var count = 90;
+    for (var i = 0; i < count; i++) {
+        var ang = (i / count) * 360 + (Math.random() * 8 - 4);
+        var el = document.createElement('div');
+        el.className = 'warp-star';
+        el.style.setProperty('--a', ang + 'deg');
+        el.style.animationDelay = (Math.random() * 0.5) + 's';
+        stars.appendChild(el);
+    }
+    ov.classList.add('visible');
+    setTimeout(function() {
+        ov.classList.remove('visible');
+        if (callback) callback();
+    }, 2400);
+}
+
+// === БОРТОВОЙ ЖУРНАЛ ===
+var JOURNAL_KEY = 'galaxy_player_journal';
+
+function loadJournal() {
+    try { return JSON.parse(localStorage.getItem(JOURNAL_KEY) || '[]'); }
+    catch(e) { return []; }
+}
+function saveJournal(j) {
+    try { localStorage.setItem(JOURNAL_KEY, JSON.stringify(j)); } catch(e) {}
+}
+function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function(c) {
+        return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];
+    });
+}
+function renderJournal() {
+    var list = document.getElementById('journalList');
+    if (!list) return;
+    var entries = loadJournal();
+    if (!entries.length) {
+        list.innerHTML = '<div class="ship-clearance-empty">— записей пока нет —</div>';
+        return;
+    }
+    list.innerHTML = entries.map(function(e) {
+        return '<div class="journal-entry">' +
+            '<div class="journal-entry-text">' + escapeHtml(e.text) + '</div>' +
+            '<div class="journal-entry-foot">' +
+            '<span>' + e.time + '</span>' +
+            '<span class="journal-entry-del" data-jdel="' + e.id + '">🗑 Удалить</span>' +
+            '</div></div>';
+    }).join('');
+
+    list.querySelectorAll('[data-jdel]').forEach(function(el) {
+        el.addEventListener('click', function() {
+            var id = parseInt(el.getAttribute('data-jdel'), 10);
+            var arr = loadJournal().filter(function(x) { return x.id !== id; });
+            saveJournal(arr);
+            renderJournal();
+        });
+    });
+}
+function addJournalEntry() {
+    var inp = document.getElementById('journalInput');
+    if (!inp) return;
+    var text = inp.value.trim();
+    if (!text) return;
+    var arr = loadJournal();
+    arr.unshift({
+        id: Date.now(),
+        text: text,
+        time: new Date().toLocaleString('ru-RU')
+    });
+    saveJournal(arr);
+    inp.value = '';
+    renderJournal();
+}
+
+// === ИНИЦИАЛИЗАЦИЯ ===
+function init() {
+    var btn = document.getElementById('shipBtn');
+    var ov = document.getElementById('shipOverlay');
+    var close = document.getElementById('shipClose');
+
+    btn.addEventListener('click', function() {
+        ov.classList.add('visible');
+        editMode = false;
+        render();
+    });
+    close.addEventListener('click', function() {
+        ov.classList.remove('visible');
+    });
+
+    document.getElementById('shipMiniApply').addEventListener('click', applyResourceModal);
+    document.getElementById('shipMiniCancel').addEventListener('click', closeResourceModal);
+    document.getElementById('shipMiniInput').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); applyResourceModal(); }
+        if (e.key === 'Escape') { e.preventDefault(); closeResourceModal(); }
+    });
+
+    document.getElementById('shipAlertBtn').addEventListener('click', function() {
+        document.getElementById('shipAlertOverlay').classList.remove('visible');
+        if (pendingReboot) {
+            var s = getState();
+            if (s) {
+                if (!s.engine) s.engine = { reserved: 0, speed: 0 };
+                s.resources.energy = s.resources.energy + s.engine.reserved;
+                s.engine.reserved = 0;
+                saveState(s);
+                render();
+            }
+            pendingReboot = false;
+        }
+    });
+
+    // Автооткрытие при загрузке
+    ov.classList.add('visible');
+    editMode = false;
+    render();
+
+    // Запуск симуляции двигателя
+    startEngineSimulation();
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() { setTimeout(init, 1500); });
+} else {
+    setTimeout(init, 1500);
+}
+})();
+</script>
+
+</body></html>
